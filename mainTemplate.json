@@ -1,0 +1,167 @@
+// for now on new storage account is supported
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "webAppName": {
+            "defaultValue": "marketplace",
+            "minLength": 2,
+            "type": "String",
+            "metadata": { "description": "Web app name." }
+        },
+        "webAppAdmin": {
+            "type": "string",
+            "metadata": { "description": "The App registration tenant Id" }
+        },
+        "location": {
+            "defaultValue": "[resourceGroup().location]",
+            "type": "String",
+            "metadata": { "description": "Location for all resources." }
+        },
+        "sku": {
+            "defaultValue": "F1",
+            "type": "String",
+            "metadata": { "description": "The SKU of App Service Plan." }
+        },
+        "storageAccName": {
+            "defaultValue": "storage",
+            "minLength": 2,
+            "type": "String",
+            "metadata": { "description": "Storage account name." }
+        },
+        "storageAccountType": {
+            "defaultValue": "Standard_LRS",
+            "allowedValues": [ "Standard_LRS", "Standard_ZRS", "Standard_GRS", "Standard_RAGRS", "Premium_LRS" ],
+            "type": "String"
+        },
+        "newOrExisting": {
+            "type": "string",
+            "defaultValue": "new",
+            "allowedValues": [ "new", "existing" ]
+        },
+        "loginAppRegDomainName": {
+            "type": "String",
+            "metadata": { "description": "The Login App registration domain name" }
+        },
+        "loginAppRegClientId": {
+            "type": "String",
+            "metadata": { "description": "The Login App registration client Id" }
+        },
+        "fulfillmentAppRegTenantId": {
+            "type": "String",
+            "metadata": { "description": "The Fulfillment App registration tenant Id" }
+        },
+        "fulfillmentAppRegClientId": {
+            "type": "String",
+            "metadata": { "description": "The Fulfillment App registration client Id" }
+        },
+        "fulfillmentAppRegClientSecret": {
+            "type": "securestring",
+            "metadata": { "description": "The Fulfillment App registration client secret" }
+        }
+    },
+    "variables": {
+        "appServiceName": "[concat(parameters('webAppName'), uniqueString(resourceGroup().id))]",
+        "appServicePlanName": "[concat(parameters('webAppName'), uniqueString(resourceGroup().id), '-asp')]",
+        "storageAccountName": "[concat(parameters('storageAccName'), uniqueString(resourceGroup().id))]",
+        "gitRepoUrl": "https://github.com/microsoft/Commercial-Marketplace-SaaS-Manual-On-Boarding"
+    },
+    "resources": [
+        {
+            "condition": "[equals(parameters('newOrExisting'), 'new')]",
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2019-06-01",
+            "name": "[variables('storageAccountName')]",
+            "location": "[resourceGroup().location]",
+            "tags": { "displayName": "storageAccount" },
+            "sku": { "name": "[parameters('storageAccountType')]" }
+        },
+        {
+            "type": "Microsoft.Web/serverfarms",
+            "apiVersion": "2020-06-01",
+            "name": "[variables('appServicePlanName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [ "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]" ],
+            "sku": { "name": "[parameters('sku')]" }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2020-06-01",
+            "name": "[variables('appServiceName')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [ "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+                           "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]" 
+                         ],
+            "properties": {
+                "siteConfig": {
+                    "netFrameworkVersion": "v5.0",
+                    "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
+                    "appSettings": 
+                        [
+                            {
+                            "name": "AzureAd:Domain",
+                            "value": "[parameters('LoginAppRegDomainName')]"
+                            },
+                            {
+                            "name": "AzureAd:ClientId",
+                            "value": "[parameters('loginAppRegClientId')]"
+                            },
+                            {
+                            "name": "MarketplaceClient:TenantId",
+                            "value": "[parameters('fulfillmentAppRegTenantId')]"
+                            },
+                            {
+                            "name": "MarketplaceClient:ClientId",
+                            "value": "[parameters('fulfillmentAppRegClientId')]"
+                            },
+                            {
+                            "name": "MarketplaceClient:ClientSecret",
+                            "value": "[parameters('fulfillmentAppRegClientSecret')]"
+                            },
+                            {
+                            "name": "WebHookTokenParameters:TenantId",
+                            "value": "[parameters('fulfillmentAppRegTenantId')]"
+                            },
+                            {
+                            "name": "WebHookTokenParameters:ClientId",
+                            "value": "[parameters('fulfillmentAppRegClientId')]"
+                            },
+                            {
+                            "name": "CommandCenter:CommandCenterAdmin",
+                            "value": "[parameters('WebAppAdmin')]"
+                            },
+                            {
+                            "name": "CommandCenter:OperationsStoreConnectionString",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(resourceId(resourceGroup().name,'Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-04-01').keys[0].value,';EndpointSuffix=core.windows.net')]"
+                            },
+                            {
+                            "name": "CommandCenter:AzureQueue:StorageConnectionString",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';AccountKey=', listKeys(resourceId(resourceGroup().name,'Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2019-04-01').keys[0].value,';EndpointSuffix=core.windows.net')]"
+                            }
+                        ]
+                }
+            },
+            "resources": [
+                {
+                    "type": "sourcecontrols",
+                    "apiVersion": "2020-06-01",
+                    "name": "web",
+                    "location": "[parameters('location')]",
+                    "dependsOn": [ "[resourceId('Microsoft.Web/sites', variables('appServiceName'))]" ],
+                    "properties": {
+                        "repoUrl": "[variables('gitRepoUrl')]",
+                        "branch": "main",
+                        "isManualIntegration": true
+                    }
+                }
+            ]
+        }
+    ],
+    "outputs": {
+        "ApplicationURL": 
+        {
+            "type": "string",
+            "value": "[reference(resourceId('Microsoft.Web/sites', variables('appServiceName')), '2018-02-01').defaultHostName]"
+        }
+    }
+}

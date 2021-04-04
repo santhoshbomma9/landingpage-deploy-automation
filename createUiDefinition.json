@@ -1,0 +1,132 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/0.1.2-preview/CreateUIDefinition.MultiVm.json#",
+    "handler": "Microsoft.Azure.CreateUIDef",
+    "version": "0.1.2-preview",
+    "parameters": {
+        "basics": [
+			{
+                "name": "deploymentInformation",
+                "type": "Microsoft.Common.InfoBox",
+                "visible": true,
+                "options": {
+                    "icon": "Warning",
+                    "text": "This managed app will deploy Azure App Service(F1), Storage account and pull code from aka.ms/marketplacesample. Please click this infobox to lear more about the sample repo.",
+                    "uri": "https://github.com/microsoft/Commercial-Marketplace-SaaS-Manual-On-Boarding/"
+                }
+            },
+            {
+            "name": "webAppName",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Web App Name",
+            "defaultValue": "marketplace",
+            "toolTip": "This value gets appended with a random value to make it unique",
+            "visible": true,
+            "constraints": 
+				{
+                    "required": true,
+                    "validationMessage": "This is a required field."
+                }
+            },
+			{
+            "name": "webAppAdmin",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Web App Admin User Email",
+            "visible": true,
+            "constraints": 
+				{
+                    "required": true,
+                    "validationMessage": "This is a required field."
+                }
+			},
+			{
+                "name": "storageConfig",
+                "type": "Microsoft.Storage.StorageAccountSelector",
+                "label": "Storage account",
+                "toolTip": "",
+                "defaultValue": {
+                    "name": "storage",
+                    "type": "Standard_LRS"
+                },
+				"require" : true,
+                "options": {
+                    "hideExisting": false
+                },
+                "visible": true
+            },
+			{
+            "name": "loginAppRegDomainName",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Login App Reg Tenant Domain Name",
+            "visible": true,
+            "constraints": 
+				{
+                    "required": true,
+                    "validationMessage": "This is a required field."
+                }
+            },
+			{
+            "name": "loginAppRegClientId",
+            "type": "Microsoft.Common.TextBox",
+            "label": "Login App Reg ClientId/AppId",
+            "visible": true,
+            "constraints": 
+				{
+                    "required": true,
+                    "validationMessage": "This is a required field."
+                }
+            },
+			{
+            "name": "fulfillmentAppRegTenantId",
+            "type": "Microsoft.Common.TextBox",
+            "label": "FulFilment App Reg TenantId",
+            "visible": true,
+            "constraints": 
+				{
+                    "required": true,
+                    "validationMessage": "This is a required field."
+                }
+            },
+			{
+            "name": "fulfillmentAppRegClientId",
+            "type": "Microsoft.Common.TextBox",
+            "label": "FulFillment App Reg ClientId/AppId",
+            "visible": true,
+            "constraints": 
+				{
+                    "required": true,
+                    "validationMessage": "This is a required field."
+                }
+            },
+			{
+            "name": "fulfillmentAppRegClientSecret",
+            "type": "Microsoft.Common.PasswordBox",
+            "label": {
+                    "password": "Fulfillment App Reg Secret"
+                },
+            "visible": true,
+            "constraints": 
+				{
+                    "required": true,
+                    "validationMessage": "This is a required field."
+                },
+			"options": 
+				{
+				"hideConfirmation": true
+				}
+            }
+        ],
+        "steps": [],
+        "outputs": {
+            "webAppName": "[basics('webAppName').value]",
+			"WebAppAdmin": "[basics('webAppAdmin').value]",
+			"location":  "[location()]",
+			"storageAccName": "[basics('storageConfig').name]",
+      		"storageAccountType": "[basics('storageConfig').type]",
+			"loginAppRegDomainName": "[basics('loginAppRegDomainName').value]",
+			"loginAppRegClientId": "[basics('loginAppRegClientId').value]",
+			"fulfillmentAppRegTenantId": "[basics('fulfillmentAppRegTenantId').value]",
+			"fulfillmentAppRegClientId": "[basics('fulfillmentAppRegClientId').value]",
+			"fulfillmentAppRegClientSecret": "[basics('fulfillmentAppRegClientSecret').value]"
+        }
+    }
+}
