@@ -58,12 +58,16 @@
         "fulfillmentAppRegClientSecret": {
             "type": "securestring",
             "metadata": { "description": "The Fulfillment App registration client secret" }
+        },
+        "managedAppInstall": {
+            "type": "bool",
+            "defaultValue": true
         }
     },
     "variables": {
         "appServiceName": "[concat(parameters('webAppName'), uniqueString(resourceGroup().id))]",
         "appServicePlanName": "[concat(parameters('webAppName'), uniqueString(resourceGroup().id), '-asp')]",
-        "storageAccountName": "[concat(parameters('storageAccName'), uniqueString(resourceGroup().id))]",
+        "storageAccountName": "[if(parameters('managedAppInstall'), parameters('storageAccName'), concat(parameters('storageAccName'), uniqueString(resourceGroup().id)))]",
         "gitRepoUrl": "https://github.com/microsoft/Commercial-Marketplace-SaaS-Manual-On-Boarding"
     },
     "resources": [
@@ -89,9 +93,7 @@
             "apiVersion": "2020-06-01",
             "name": "[variables('appServiceName')]",
             "location": "[parameters('location')]",
-            "dependsOn": [ "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]",
-                           "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]" 
-                         ],
+            "dependsOn": [ "[resourceId('Microsoft.Web/serverfarms', variables('appServicePlanName'))]" ],
             "properties": {
                 "siteConfig": {
                     "netFrameworkVersion": "v5.0",

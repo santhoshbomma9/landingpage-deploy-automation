@@ -39,7 +39,8 @@ $deployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroup `
                   -fulfillmentAppRegTenantId $tenantId `
                   -fulfillmentAppRegClientId $fulfillmentAppId `
                   -fulfillmentAppRegClientSecret (ConvertTo-SecureString $PasswordCredential.Value -AsPlainText -Force) `
-                  -webAppAdmin $AppAdmin
+                  -webAppAdmin $AppAdmin `
+                  -managedAppInstall $false
 
 ## STEP 4: ADD REDIRECT URI TO THE LOGIN APP REGISTRATION
 $rawurl =  $deployment.Outputs.applicationURL.Value

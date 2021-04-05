@@ -17,7 +17,7 @@
             {
             "name": "webAppName",
             "type": "Microsoft.Common.TextBox",
-            "label": "Web App Name",
+            "label": "Web App Prefix",
             "defaultValue": "marketplace",
             "toolTip": "This value gets appended with a random value to make it unique",
             "visible": true,
@@ -49,7 +49,7 @@
                 },
 				"require" : true,
                 "options": {
-                    "hideExisting": false
+                    "hideExisting": true
                 },
                 "visible": true
             },
