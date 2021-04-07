@@ -1,3 +1,4 @@
+$ErrorActionPreference = "Stop"
 
 $ResourceGroup = Read-Host "Please enter resource group to deploy the azure resources"
 $AppAdmin = Read-Host "Please enter email of the user to be the app admin:"
