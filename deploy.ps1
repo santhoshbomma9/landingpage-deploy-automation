@@ -1,5 +1,6 @@
+$ErrorActionPreference = "Stop"
 
-$ResourceGroup = Read-Host "Please enter resource group to deploy the azure resources"
+$ResourceGroupName = Read-Host "Please enter resource group to deploy the azure resources"
 $AppAdmin = Read-Host "Please enter email of the user to be the app admin:"
 
 ##  STEP 1: CREATE LOGIN APP REGISTRATION
@@ -18,6 +19,13 @@ $PasswordCredential.KeyId = $Guid
 $PasswordCredential.Value = ([System.Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes(($Guid))))+"="
 $fulfillmentAppId = New-AzureADApplication -DisplayName "fulfillmentapp" -PasswordCredentials $PasswordCredential | %{  $_.AppId }
 
+## CREATE RESOURCE GROUP IF NEEDED
+$ResourceGroup = Get-AzResourceGroup -Name $ResourceGroupName
+
+if(!$ResourceGroup) {
+    $ResourceGroup = New-AzResourceGroup -Name $ResourceGroupName -Location "east us"
+}
+
 ## SET VARIABLES
 $landingPageAppId = $landingPageApp.AppId
 $tenantId = Get-AzureADTenantDetail | %{  $_.ObjectId }
@@ -32,7 +40,7 @@ $publisherDomain = Get-AzureADApplication -ObjectId $landingPageApp.ObjectId | %
  #>
 
 ## STEP 3: DEPLOY AZURE RESOURCES AND APPLICATION
-$deployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroup `
+$deployment = New-AzResourceGroupDeployment -ResourceGroupName $ResourceGroupName `
                   -TemplateFile .\mainTemplate.json `
                   -loginAppRegDomainName $publisherDomain `
                   -loginAppRegClientId $landingPageAppId `
