@@ -20,9 +20,9 @@ $PasswordCredential.Value = ([System.Convert]::ToBase64String([System.Text.Encod
 $fulfillmentAppId = New-AzureADApplication -DisplayName "fulfillmentapp" -PasswordCredentials $PasswordCredential | %{  $_.AppId }
 
 ## CREATE RESOURCE GROUP IF NEEDED
-$ResourceGroup = Get-AzResourceGroup -Name $ResourceGroupName
+Get-AzResourceGroup -Name $ResourceGroupName -ErrorVariable notPresent -ErrorAction SilentlyContinue
 
-if(!$ResourceGroup) {
+if($notPresent) {
     $ResourceGroup = New-AzResourceGroup -Name $ResourceGroupName -Location "east us"
 }
 
